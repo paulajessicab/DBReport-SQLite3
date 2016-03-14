@@ -100,10 +100,13 @@ insert_column n column table repo@(R ttl col cond bstl conn) = if n < length(col
                                                                          col' = xs++[(column,table)]++ys
 
 --Elimina una columna dado un nombre
---Implementar
+erase_column :: String -> Repo -> Repo
+erase_column name (R ttl col cond bstl conn) = R ttl col' cond bstl conn
+                                                   where col' = filter (\(x,y) -> x /= name) col
 
---Elimina todas las columnas de una tabla
---Implementar
+--Elimina todas las columnas de una tabla (y condiciones)
+erase_all_columns :: Repo -> Repo
+erase_all_columns (R ttl col cond bstl conn) = R ttl [] None bstl conn
 					      
 --Cambia la fuente del cuerpo													      
 body_font :: FontName -> Repo -> Repo
