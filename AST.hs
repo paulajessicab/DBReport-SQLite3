@@ -4,9 +4,12 @@ import Database.HDBC.Sqlite3 (Connection)
 import Graphics.PDF (PDFFont, FontName)
 import Data.Bool
 
-type Columns = [(String, String)] --Column, Table
 type Header = String
+type Where = String
 type FooterBool = Bool
+type Distinct = Bool
+type Columns = [(String,String)] --estrella (!)
+
 
 {- Fuentes
 FontName = Helvetica 
@@ -23,8 +26,10 @@ FontName = Helvetica
               | Courier_BoldOblique
               | Symbol
               | ZapfDingbats   
--}    
-           
+    
+data Columns = Columns [(String, String)] --Column, table
+             | Star String                --all from tables
+-}           
 data PageSize = A4
               | Legal
               | Other Int Int --width, height
@@ -40,11 +45,17 @@ data Position = Center
               | Justified
 	deriving Show
     
-data Conditions = None  --Acomodar(!)
-                | Cond1
-                | Cond2
+data Conditions = Conditions Distinct Where OrderBy
     deriving Show
-           
+    
+data OrderBy = OrderBy String Dir
+             | None
+    deriving Show
+
+data Dir = Asc
+         | Desc
+    deriving Show
+    
 data TStyle = TStyle PDFFont Position --PDFFont = PDFFont FontName Size
 	deriving Show --hacer pretty printer
 

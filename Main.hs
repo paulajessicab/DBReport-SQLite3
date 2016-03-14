@@ -66,8 +66,8 @@ parseCmd ["show", "columns"] repo = do print (get_columns repo)
 										return (title_stl font' pos' (read size) decor' repo)
 											where font' = parseFont font
 											      pos' = parsePosition pos
-											      decor' = parseDecor decor-}
-{--parseCmd ["change", "title", "font", font] repo = return (title_font (parseFont font) repo)
+											      decor' = parseDecor decor
+parseCmd ["change", "title", "font", font] repo = return (title_font (parseFont font) repo)
 --parseCmd ["change", "title", "position", pos] repo = return repo --(!)
 --parseCmd ["change", "title", "size", size] repo = return repo --(!)
 --parseCmd ["change", "title", "decor", decor] repo = return repo --(!)
@@ -84,7 +84,7 @@ parseCmd ["exit"] repo = do disconnect (get_connection repo)
 parseCmd _ repo = do print "Comando no conocido"--exitWith (ExitFailure 1) --error y seguir
                      return repo
 
---
+-}
 
 --Font Parser VER
 {-parseFont :: String -> Font

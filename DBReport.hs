@@ -32,8 +32,11 @@ initTitle = Title "Nuevo Reporte" initTStyle
 initBStyle :: BStyle
 initBStyle = BStyle A4 Default defaultFont Center [] True
 
+initCond :: Conditions
+initCond = Conditions False [] None
+
 initRepo :: Connection -> Repo
-initRepo conn = R initTitle [("ID","Clientes"),("NAME","Clientes")] None initBStyle conn
+initRepo conn = R initTitle [("ID","Clientes"),("NAME","Clientes")] initCond initBStyle conn
 
 {-\\\\\\\\\\\\\\\\\\\\\\\\\/////////////////////////-}
 
@@ -106,7 +109,7 @@ erase_column name (R ttl col cond bstl conn) = R ttl col' cond bstl conn
 
 --Elimina todas las columnas de una tabla (y condiciones)
 erase_all_columns :: Repo -> Repo
-erase_all_columns (R ttl col cond bstl conn) = R ttl [] None bstl conn
+erase_all_columns (R ttl col cond bstl conn) = R ttl [] initCond bstl conn
 					      
 --Cambia la fuente del cuerpo													      
 body_font :: FontName -> Repo -> Repo
@@ -134,16 +137,23 @@ header text (R ttl col cond bstl conn) = R ttl col cond bstl' conn
 
 --Inserta/Elimina número de página al pie
 footer :: FooterBool -> Repo -> Repo
-footer bool (R ttl col cond bstl conn) = if bool
-                                         then let bstl' = change_footer_set bstl
-                                              in R ttl col cond bstl' conn
-                                         else let bstl' = change_footer_unset bstl
-                                              in R ttl col cond bstl' conn
---Inserta condiciones
---Implementar
+footer bool (R ttl col cond bstl conn) = R ttl col cond bstl' conn
+                                         where bstl' = change_footer bool bstl
+                                         
+--Habilita/Deshabilita registros únicos
+distinct :: Distinct -> Repo -> Repo
+distinct bool (R ttl col cond bstl conn) = R ttl col cond' bstl conn
+                                                      where cond' = change_distinct bool cond
 
---Elimina condiciones
---Implementar
+--Inserta/Elimina condiciones where
+cond_where :: String -> Repo -> Repo
+cond_where clause (R ttl col cond bstl conn) = R ttl col cond' bstl conn
+                                                   where cond' = change_where clause cond
+                                                  
+--Cambia o desactiva ordenamiento
+order_by :: OrderBy -> Repo -> Repo
+order_by order (R ttl col cond bstl conn) = R ttl col cond' bstl conn
+                                                where cond' = change_order order cond       
 
 
 {--------------------------------------}												
@@ -241,11 +251,17 @@ change_bpos pos' (BStyle ps m f pos h f') = BStyle ps m f pos' h f'
 change_header :: Header -> BStyle -> BStyle
 change_header header' (BStyle ps m f p header f') = BStyle ps m f p header' f'
 
-change_footer_set :: BStyle -> BStyle
-change_footer_set (BStyle ps m f p h f') = BStyle ps m f p h True
+change_footer :: Bool -> BStyle -> BStyle
+change_footer bool (BStyle ps m f p h f') = BStyle ps m f p h bool
 
-change_footer_unset :: BStyle -> BStyle
-change_footer_unset (BStyle ps m f p h f') = BStyle ps m f p h False
+change_distinct :: Bool -> Conditions -> Conditions
+change_distinct bool (Conditions dist wh order) = Conditions bool wh order
+
+change_where :: String -> Conditions -> Conditions
+change_where clause (Conditions dist wh order) = Conditions dist clause order
+
+change_order :: OrderBy -> Conditions -> Conditions
+change_order order' (Conditions dist wh order) = Conditions dist wh order'
 
 --BStyle PageSize Margins PDFFont Position Header FooterBool
 --
