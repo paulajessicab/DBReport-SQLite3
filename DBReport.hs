@@ -13,6 +13,38 @@ import System.IO
 import Graphics.PDF
 import Graphics.PDF.Typesetting
 --
+import Control.Monad.State
+import Data.Bool
+
+
+isEmpty [] = True
+isEmpty _ = False
+
+--type ReturnMatrix = [State Int [String]]
+
+fillMatrix :: [[SqlValue]] -> [([String],Int)]
+fillMatrix [] = []
+fillMatrix ([]:xs) = []
+fillMatrix xss = if (isEmpty tl)
+                 then [runState (convRow' (map head xss)) 0]
+                 else (runState (convRow' (map head xss)) 0) : (fillMatrix (map tail xss))
+                     where tl = map tail xss
+
+convRow' :: [SqlValue] -> State Int [String]
+convRow' []     = return []
+convRow' [x]    = do curr <- get
+                     let y = conv x
+                     if (length y > curr) then do {put (length y); return [y]} else return [y]
+convRow' (x:xs) = do curr <- get
+                     let y = conv x
+                     if (length y > curr) then do {put (length y); ys <- (convRow' xs); return (y:ys)} else do {ys <- (convRow' xs); return (y:ys)}
+
+conv :: SqlValue -> String
+conv x = case fromSql x of
+             Just y -> y
+             Nothing -> "NULL"
+
+--get y put
 
 
 --ver http://book.realworldhaskell.org/read/using-databases.html
@@ -162,7 +194,7 @@ order_by order (R ttl col cond bstl conn) = R ttl col cond' bstl conn
 
 
 {-/////////////////| Ejecución |\\\\\\\\\\\\\\\\\-}
-generate :: Repo -> IO ()
+{-generate :: Repo -> IO ()
 generate repo = do xs <- quickQuery' conn ("SELECT "++cols++" from "++tables) [] --Cuidado cuando no hay nada! 
                    let stringRows = map convRow xs --stringRows :: [String]
 
@@ -194,6 +226,26 @@ convRow [x] = case fromSql x of
 convRow (x:xs) = case fromSql x of
                     Just y -> y ++ " " ++ (convRow xs)
                     Nothing -> "NULL " ++ (convRow xs)
+-}
+
+generate::Repo -> IO ()
+generate repo = do xs <- quickQuery' conn ("SELECT "++cols++" from "++tables) []
+                   let mat = fillMatrix xs
+                     
+                   printMatrix mat
+                    
+                   where conn = get_connection repo
+                         cols_tables = unzip $ get_columns repo
+                         cols = unwords' $ fst cols_tables --unwords' agrega comas
+                         tables = unwords' $ nub $ snd cols_tables --nub saca repeticiones
+             
+printMatrix :: [([String],Int)] -> IO ()
+printMatrix [] = putStr ""
+printMatrix (([],_):xs) = putStr ""
+printMatrix xss = do putStrLn $ unwords q
+                     printMatrix (map (\(x,y)->(tail x, y)) xss)
+                      where q = map head p
+                            p = map fst xss
 
 {-\\\\\\\\\\\\\\\\\\\\\\\///////////////////////-}
 
@@ -269,6 +321,9 @@ toPageSize :: PageSize -> PDFRect
 toPageSize A4    = PDFRect 0 0 210 297
 toPageSize Legal = PDFRect 0 0 216 356
 toPageSize (Other x y) = PDFRect 0 0 x y
+
+
+--create_query :: Repo -> String
 
 
 --VER unfold

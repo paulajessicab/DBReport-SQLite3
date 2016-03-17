@@ -4,12 +4,13 @@ import Database.HDBC.Sqlite3 (Connection)
 import Graphics.PDF (PDFFont, FontName)
 import Data.Bool
 
+import Control.Monad.State --
+
 type Header = String
 type Where = String
 type FooterBool = Bool
 type Distinct = Bool
 type Columns = [(String,String)] --estrella (!)
-
 
 {- Fuentes
 FontName = Helvetica 

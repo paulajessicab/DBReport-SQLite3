@@ -79,12 +79,11 @@ parseCmd ["change", "title", "font", font] repo = return (title_font (parseFont 
 --parseCmd ["change", "body", "decor", decor] repo = return repo --(!)                                        
 --parseCmd ("use":("columns":cols)) repo = return (columns cols repo)
 --parseCmd ["insert", column, "from", table] repo = return (columns column table repo)
+-}
 parseCmd ["exit"] repo = do disconnect (get_connection repo)
                             exitWith ExitSuccess
 parseCmd _ repo = do print "Comando no conocido"--exitWith (ExitFailure 1) --error y seguir
                      return repo
-
--}
 
 --Font Parser VER
 {-parseFont :: String -> Font
